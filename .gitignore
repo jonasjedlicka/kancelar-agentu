@@ -1,0 +1,14 @@
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+*.tmp
+# osobní data aplikace se nikdy necommitují
+state.json
+history*.jsonl
+layout.json
+settings.json
+server.json
+test-data/
+docs/screenshots/*.tmp.png

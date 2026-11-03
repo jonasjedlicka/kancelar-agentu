@@ -1,0 +1,77 @@
+{
+  "name": "kancelar-agentu",
+  "productName": "Kancelář agentů",
+  "version": "1.0.0",
+  "description": "Pixel-art kancelář, ve které vidíš, co dělají tvoji agenti.",
+  "main": "src/main/main.js",
+  "private": true,
+  "license": "MIT",
+  "author": "Kancelář agentů",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac dmg zip --arm64",
+    "test": "node --test test/*.test.js",
+    "make:font": "node scripts/make-font.js",
+    "make:icon": "node scripts/make-icon.js"
+  },
+  "build": {
+    "appId": "cz.kancelar-agentu.app",
+    "productName": "Kancelář agentů",
+    "artifactName": "Kancelar-Agentu-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "kancelar",
+        "to": "kancelar"
+      }
+    ],
+    "asar": true,
+    "afterPack": "scripts/after-pack.js",
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "minimumSystemVersion": "12.0",
+      "extendInfo": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
+    },
+    "dmg": {
+      "title": "Kancelář agentů",
+      "sign": false
+    },
+    "executableName": "Kancelar Agentu"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  }
+}

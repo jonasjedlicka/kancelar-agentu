@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Kancelář agentů</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="stage">
+    <canvas id="office" aria-label="Kancelář agentů v pixel artu"></canvas>
+    <div id="editbar" hidden>
+      <span>Přetáhni nábytek myší. Zelená = lze položit.</span>
+      <button id="edit-save" class="btn primary">Uložit</button>
+      <button id="edit-cancel" class="btn">Zrušit</button>
+      <button id="edit-reset" class="btn">Výchozí</button>
+    </div>
+  </main>
+  <aside id="panel">
+    <header>
+      <h1>Kancelář agentů</h1>
+      <p id="api" class="muted"></p>
+    </header>
+    <section id="list" aria-label="Agenti"></section>
+    <section id="detail" hidden></section>
+    <footer>
+      <label class="toggle"><input type="checkbox" id="opt-demo"><span></span>Demo režim</label>
+      <label class="toggle"><input type="checkbox" id="opt-claude"><span></span>Claude Code</label>
+      <label class="toggle"><input type="checkbox" id="opt-ollama"><span></span>Ollama</label>
+      <div class="row">
+        <button id="btn-edit" class="btn">Upravit rozložení</button>
+        <button id="btn-data" class="btn">Složka s daty</button>
+      </div>
+    </footer>
+  </aside>
+  <script src="font-data.js"></script>
+  <script src="font.js"></script>
+  <script src="world.js"></script>
+  <script src="sprites.js"></script>
+  <script src="render.js"></script>
+  <script src="scene.js"></script>
+  <script src="editor.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# kancelar – pošle stav agenta do běžící aplikace Kancelář agentů.
+#   ./kancelar status skolnik working "Kontroluju Edookit"
+#   ./kancelar list
+set -euo pipefail
+
+usage() {
+  cat <<'TXT'
+Použití:
+  kancelar status <agent> <stav> [text úkolu]
+  kancelar list
+  kancelar help
+
+Agenti: sef, skolnik, kuchar, tajemnik, planovac, spravce, knihovnik
+Stavy:  idle (volno), working (pracuje), reading (čte), thinking (přemýšlí),
+        waiting (čeká na schválení), done (hotovo), error (chyba)
+
+Port se čte ze souboru server.json ve složce s daty aplikace,
+nebo z proměnné KANCELAR_PORT. Aplikace musí být spuštěná.
+TXT
+}
+
+data_dir() {
+  if [ -n "${KANCELAR_DATA_DIR:-}" ]; then
+    printf '%s' "$KANCELAR_DATA_DIR"
+  elif [ "$(uname -s)" = "Darwin" ]; then
+    printf '%s' "$HOME/Library/Application Support/Kancelar Agentu"
+  else
+    printf '%s' "${XDG_CONFIG_HOME:-$HOME/.config}/Kancelar Agentu"
+  fi
+}
+
+port() {
+  if [ -n "${KANCELAR_PORT:-}" ]; then printf '%s' "$KANCELAR_PORT"; return; fi
+  local f
+  f="$(data_dir)/server.json"
+  if [ -f "$f" ]; then
+    local p
+    p="$(grep -o '"port"[[:space:]]*:[[:space:]]*[0-9]*' "$f" | grep -o '[0-9]*$' || true)"
+    if [ -n "$p" ]; then printf '%s' "$p"; return; fi
+  fi
+  printf '47800'
+}
+
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/ }"
+  s="${s//$'\r'/ }"
+  s="${s//$'\t'/ }"
+  printf '%s' "$s"
+}
+
+call() {
+  local method="$1" path="$2" body="${3:-}" url out code
+  url="http://127.0.0.1:$(port)$path"
+  if [ "$method" = "POST" ]; then
+    out="$(curl -sS --max-time 5 -w '\n%{http_code}' -X POST -H 'Content-Type: application/json' --data-binary "$body" "$url" 2>&1)" || {
+      echo "Aplikace Kancelář agentů neběží (nelze se připojit na $url)." >&2; exit 2; }
+  else
+    out="$(curl -sS --max-time 5 -w '\n%{http_code}' "$url" 2>&1)" || {
+      echo "Aplikace Kancelář agentů neběží (nelze se připojit na $url)." >&2; exit 2; }
+  fi
+  code="${out##*$'\n'}"
+  out="${out%$'\n'*}"
+  if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+    printf '%s\n' "$out"
+  else
+    printf '%s\n' "$out" >&2
+    exit 1
+  fi
+}
+
+cmd="${1:-help}"
+case "$cmd" in
+  status)
+    if [ $# -lt 3 ]; then usage >&2; exit 64; fi
+    agent="$2"; state="$3"; shift 3
+    task="${*:-}"
+    body="{\"state\":\"$(json_escape "$state")\",\"task\":\"$(json_escape "$task")\"}"
+    if printf '%s' "$agent" | LC_ALL=C grep -q '[^A-Za-z0-9_-]'; then
+      # české jméno s diakritikou (např. Školník) – zakódujeme, server si ho převede sám
+      enc_agent="$(printf '%s' "$agent" | od -An -tx1 | tr -d ' \n' | sed 's/../%&/g')"
+    else
+      enc_agent="$agent"
+    fi
+    call POST "/api/agents/$enc_agent/status" "$body"
+    ;;
+  list)
+    call GET "/api/agents"
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    usage >&2; exit 64
+    ;;
+esac
