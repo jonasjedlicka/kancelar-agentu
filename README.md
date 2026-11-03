@@ -72,9 +72,9 @@ npm run build:mac
 Výsledek:
 - `dist/Kancelar-Agentu-1.0.0-arm64.dmg`: instalační obraz,
 - `dist/Kancelar-Agentu-1.0.0-arm64-mac.zip`: zabalená aplikace,
-- `dist/mac-arm64/Kancelář agentů.app`: samotná aplikace.
+- `dist/mac-arm64/Kancelar Agentu.app`: samotná aplikace.
 
-Otevři `.dmg` a přetáhni *Kancelář agentů* do složky *Aplikace*.
+Otevři `.dmg` a přetáhni *Kancelar Agentu* do složky *Aplikace*.
 
 Internet je potřeba jen při `npm install` a při prvním sestavení (stažení Electronu).
 Hotová aplikace pak funguje bez internetu.
@@ -86,7 +86,7 @@ napoprvé zablokuje. Na Apple Silicon dostane při sestavení jen lokální „a
 (`codesign -s -`, žádný certifikát), bez které by se nespustila vůbec.
 
 Postup:
-1. Ve Finderu otevři *Aplikace*, klikni na **Kancelář agentů** pravým tlačítkem a zvol **Otevřít**.
+1. Ve Finderu otevři *Aplikace*, klikni na **Kancelar Agentu** pravým tlačítkem a zvol **Otevřít**.
 2. V dialogu znovu zvol **Otevřít**.
 
 Když dialog nabízí jen „Přesunout do koše“ (macOS 15 a novější):
@@ -97,7 +97,7 @@ Když dialog nabízí jen „Přesunout do koše“ (macOS 15 a novější):
 Pokud macOS hlásí, že je aplikace „poškozená“, odstraň příznak karantény z internetu:
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/Kancelář agentů.app"
+xattr -dr com.apple.quarantine "/Applications/Kancelar Agentu.app"
 ```
 
 Pak už se aplikace spouští normálně.
@@ -124,7 +124,7 @@ fungují, jen dokud je aplikace otevřená.
 ```
 
 Příkaz je ve složce repozitáře a je přibalený i v aplikaci:
-`/Applications/Kancelář agentů.app/Contents/Resources/kancelar`. Stačí mu `bash` a `curl`,
+`/Applications/Kancelar Agentu.app/Contents/Resources/kancelar`. Stačí mu `bash` a `curl`,
 které má macOS v základu. Port si přečte ze `server.json` (nebo z proměnné `KANCELAR_PORT`).
 
 Návratové kódy: `0` = OK, `1` = chyba v požadavku (neznámý agent nebo stav), `2` = aplikace neběží.

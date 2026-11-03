@@ -1,6 +1,6 @@
 {
   "name": "kancelar-agentu",
-  "productName": "Kancelář agentů",
+  "productName": "Kancelar Agentu",
   "version": "1.0.0",
   "description": "Pixel-art kancelář, ve které vidíš, co dělají tvoji agenti.",
   "main": "src/main/main.js",
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "cz.kancelar-agentu.app",
-    "productName": "Kancelář agentů",
+    "productName": "Kancelar Agentu",
     "artifactName": "Kancelar-Agentu-${version}-${arch}.${ext}",
     "directories": {
       "output": "dist",
@@ -61,14 +61,14 @@
       "extendInfo": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
-        }
+        },
+        "CFBundleDisplayName": "Kancelář agentů"
       }
     },
     "dmg": {
       "title": "Kancelář agentů",
       "sign": false
-    },
-    "executableName": "Kancelar Agentu"
+    }
   },
   "devDependencies": {
     "electron": "45.2.1",
