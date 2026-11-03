@@ -212,6 +212,8 @@ function registerIpc() {
 app.whenReady().then(async () => {
   hardenSession();
   store = new Store(dataDir);
+  const late = store.ingestOutbox();
+  if (late) console.log(`Načteno ${late} odložených hlášení agentů.`);
   demo = createDemo(store);
   ollama = createOllama(store);
   claude = createClaude(store);

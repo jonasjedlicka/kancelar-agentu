@@ -175,6 +175,76 @@ Zapínají se přepínači v panelu nebo v menu **Kancelář**:
 - **Ollama:** aplikace se ptá `http://127.0.0.1:11434/api/ps`. Každý načtený model dostane postavu.
 - **Demo režim:** agenti sami střídají úkoly a stavy.
 
+## Agenti s lokálním modelem (Ollama)
+
+Agent dostane úkol jako text, zavolá lokální model v [Ollamě](https://ollama.com) a výsledek uloží.
+Do kanceláře hlásí stav: nejdřív „přemýšlí“, na konci „hotovo“ nebo „chyba“.
+
+Model **nedostává žádné nástroje**. Nespouští příkazy, nemění soubory a nechodí na internet,
+jen přijme text a vrátí text. Ollama musí běžet na tomto počítači (127.0.0.1).
+
+### Instalace Ollamy a modelu
+
+1. Stáhni Ollamu pro macOS z https://ollama.com/download, otevři ji a nech ji běžet (ikona v liště).
+2. Stáhni model (asi 5 GB):
+
+```bash
+ollama pull qwen3:8b
+```
+
+### Spuštění agenta
+
+```bash
+./kancelar run sef "Naplánuj sobotní výlet s dětmi, max. 2 hodiny jízdy"
+```
+
+```bash
+./kancelar run tajemnik "Napiš učitelce omluvenku, Ema byla včera nemocná"
+```
+
+```bash
+./kancelar agents
+```
+
+Pro `run` a `test-model` je potřeba Node.js. Když chybí, použije se Electron z nainstalované aplikace.
+
+- **Definice agentů:** `~/Library/Application Support/Kancelar Agentu/agents/<id>.json`.
+  Každý soubor obsahuje `name`, `role`, `system` (systémový prompt), `model` a `timeoutSec`.
+  Volitelně `office`, tedy kterou postavu v kanceláři agent ovládá (výchozí je postava se stejným id).
+  Při prvním použití se založí ukázkoví agenti Šéf a Tajemník.
+- **Výsledky:** `…/Kancelar Agentu/results/` jako markdown s časem, modelem, délkou běhu,
+  počtem tokenů a pamětí modelu. Uloží se i chyby.
+- **Nastavení modelu:** volá se `/api/chat` s `num_ctx` 8192, `temperature` 0,2, `think: false`
+  a `keep_alive` 2 minuty. Model se pak sám uvolní z paměti.
+- **Fronta:** najednou běží jen jeden agent. Další počká (vypíše „Ve frontě…“) a postava
+  mezitím odpočívá.
+- **Kancelář neběží:** běh normálně doběhne a hlášení se uloží do `outbox.jsonl`.
+  Doručí se při dalším spuštění příkazu nebo hned po startu aplikace.
+- **Chyby:** jasná hláška, když Ollama neběží, model není stažený (s příkazem `ollama pull`)
+  nebo vyprší časový limit.
+
+### Zkouška češtiny
+
+```bash
+./kancelar test-model
+```
+
+```bash
+./kancelar test-model gemma3:4b
+```
+
+Příkaz projde 6 úloh:
+1. shrnutí textu,
+2. zkrácení zprávy rodičům,
+3. termíny do JSON,
+4. rozdělení úkolů podle důležitosti,
+5. oprava překlepů,
+6. otázka na rozvrh.
+
+U každé úlohy změří čas, tokeny za sekundu a jestli výstup splnil formu (platný JSON, délka,
+nadpisy). Správnost obsahu nehodnotí. Tabulka i všechny odpovědi se vypíšou a uloží
+do `results/test-model_<model>_<čas>.md`. V tabulce je prázdný sloupec „Známka“ pro tvé hodnocení.
+
 ## Data
 
 Data jsou ve složce `~/Library/Application Support/Kancelar Agentu`.
@@ -187,6 +257,10 @@ Otevřeš ji přes menu **Soubor → Otevřít složku s daty** (⇧⌘O) nebo t
 | `layout.json` | uložené rozložení nábytku (smazáním se vrátí výchozí) |
 | `settings.json` | přepínače demo, Claude Code a Ollama |
 | `server.json` | port běžícího API (po ukončení aplikace se smaže) |
+| `agents/` | definice agentů pro `kancelar run` |
+| `results/` | výsledky agentů a testů modelů (markdown) |
+| `outbox.jsonl` | hlášení, která čekají, až poběží kancelář |
+| `queue/` | fronta běžících agentů |
 | `Chromium/` | interní mezipaměti Electronu |
 
 ## Bezpečnost
@@ -205,7 +279,8 @@ Otevřeš ji přes menu **Soubor → Otevřít složku s daty** (⇧⌘O) nebo t
 npm test
 ```
 
-Testy pokrývají API, příkaz `kancelar`, ukládání, A*, editor rozložení a čtení transkriptů Claude Code.
+Testy pokrývají API, příkaz `kancelar`, ukládání, A*, editor rozložení, čtení transkriptů Claude Code
+a spouštěč agentů. Spouštěč se testuje proti napodobenině Ollamy v `test/fixtures/mock-ollama.js`.
 
 ```bash
 xvfb-run -a node scripts/screenshots.js docs/screenshots
@@ -225,6 +300,7 @@ Struktura:
 src/main/        hlavní proces: okno, menu, API server, úložiště, demo, integrace
 src/preload/     bezpečný most mezi stránkou a hlavním procesem
 src/renderer/    kancelář: písmo, spritey, dlaždice, A*, simulace, editor, panel
+cli/             spouštěč agentů a test modelu (Node.js bez závislostí), ukázkoví agenti
 scripts/         generátory písma a ikony, snímky obrazovky, after-pack
 kancelar         příkaz pro terminál
 ```

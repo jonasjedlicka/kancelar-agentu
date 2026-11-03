@@ -207,6 +207,27 @@ class Store extends EventEmitter {
     return true;
   }
 
+  /* Hlášení, která spouštěč agentů uložil, když kancelář neběžela (outbox.jsonl). */
+  ingestOutbox() {
+    const file = path.join(this.dir, 'outbox.jsonl');
+    const work = file + '.' + process.pid;
+    try { fs.renameSync(file, work); } catch (_) { return 0; }
+    let n = 0;
+    const before = new Map(Array.from(this.agents.values()).map((a) => [a.id, a.updatedAt]));
+    for (const line of fs.readFileSync(work, 'utf8').split('\n')) {
+      let e;
+      try { e = JSON.parse(line); } catch (_) { continue; }
+      const a = e && this.agents.get(String(e.agent || ''));
+      if (!a || !STATES.includes(e.state)) continue;
+      // starší hlášení nesmí přepsat stav, který mezitím přišel jinou cestou
+      if (before.get(a.id) && e.ts && before.get(a.id) > e.ts) continue;
+      this.setStatus(a.id, e.state, e.task, 'outbox');
+      n++;
+    }
+    fs.rmSync(work, { force: true });
+    return n;
+  }
+
   writeServerInfo(info) {
     writeJsonAtomic(this.files.server, info);
   }

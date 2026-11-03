@@ -9,6 +9,9 @@ usage() {
 Použití:
   kancelar status <agent> <stav> [text úkolu]
   kancelar list
+  kancelar run <agent> "<úkol>"      spustí agenta nad lokálním modelem v Ollamě
+  kancelar test-model [model]        6 úloh v češtině (výchozí model qwen3:8b)
+  kancelar agents                    seznam agentů ze složky agents/
   kancelar help
 
 Agenti: sef, skolnik, kuchar, tajemnik, planovac, spravce, knihovnik
@@ -72,8 +75,28 @@ call() {
   fi
 }
 
+# Node.js pro run/test-model: systémový node, jinak Electron z nainstalované aplikace.
+run_node() {
+  local here js
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  js="$here/cli/main.js"
+  if [ ! -f "$js" ]; then echo "Chybí $js" >&2; exit 1; fi
+  if command -v node >/dev/null 2>&1; then
+    exec node "$js" "$@"
+  fi
+  local app
+  for app in "$here/../MacOS/Kancelar Agentu" "/Applications/Kancelar Agentu.app/Contents/MacOS/Kancelar Agentu"; do
+    if [ -x "$app" ]; then ELECTRON_RUN_AS_NODE=1 exec "$app" "$js" "$@"; fi
+  done
+  echo "Pro tento příkaz je potřeba Node.js (https://nodejs.org) nebo nainstalovaná aplikace Kancelar Agentu." >&2
+  exit 1
+}
+
 cmd="${1:-help}"
 case "$cmd" in
+  run|test-model|agents|flush)
+    run_node "$@"
+    ;;
   status)
     if [ $# -lt 3 ]; then usage >&2; exit 64; fi
     agent="$2"; state="$3"; shift 3

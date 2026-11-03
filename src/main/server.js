@@ -146,7 +146,7 @@ function createServer(store) {
 
   return {
     listen,
-    close: () => new Promise((r) => server.close(() => r())),
+    close: () => new Promise((r) => { server.close(() => r()); server.closeAllConnections(); }),
     get port() { return port; }
   };
 }
